@@ -22,15 +22,15 @@ That's it. No setup, no hunting for model weights. It downloads everything and s
 
 ## What makes this different
 
-Voxtral isn't just another speech model. It's Mistral's language model that can hear:
+Most speech models do one thing. Voxtral does two things really well.
 
-- **Actually understands context**: Can handle up to 30 minutes of audio for transcription, 40 minutes for understanding
-- **Speaks 8 languages**: Automatic language detection across English, Spanish, French, Portuguese, Hindi, German, Dutch, and Italian  
-- **Two modes**: Perfect transcription AND smart audio analysis
-- **Function calling from voice**: Trigger backend functions and API calls directly from what people say
-- **Built on Mistral Small 3**: All the text smarts, plus audio superpowers
+First, it transcribes audio. You can throw 30 minutes of audio at it and it'll write down what everyone said. It automatically figures out what language people are speaking - works with English, Spanish, French, Portuguese, Hindi, German, Dutch, and Italian.
 
-Pick Mini (3B) for speed or Small (24B) for accuracy.
+Second, it understands what's happening in audio. Ask it questions about a podcast and it can tell you what the host was discussing. Play it a meeting recording and it can summarize the key points. This part can handle up to 40 minutes of audio.
+
+You can also use it to trigger functions in your code just by talking to it - no need to build separate speech recognition.
+
+There are two sizes: the small one (3 billion parameters) runs faster, the big one (24 billion parameters) is more accurate for tricky audio.
 
 ## Some things you can try
 
@@ -60,20 +60,20 @@ cog predict -i audio=@presentation.wav -i mode="understanding" -i max_tokens=800
 - `mode` - `"transcription"` (speech-to-text) or `"understanding"` (analyze and answer questions)
 - `prompt` - Question or instruction for understanding mode (ignored in transcription)  
 - `language` - `"Auto-detect"` or pick one (English, French, German, Spanish, Italian, Portuguese, Dutch, Russian, Chinese, Japanese, Arabic)
-- `model_size` - `"mini"` (3B, faster) or `"small"` (24B, more accurate)
+- `model_size` - `"mini"` (3 billion parameters, faster) or `"small"` (24 billion parameters, more accurate)
 - `max_tokens` - Response length (50-1000 tokens)
 
 ## What you need
 
-- NVIDIA GPU with ~8GB VRAM for Mini model, ~55GB for Small model
+- NVIDIA GPU with around 8GB of memory for the mini model, around 55GB for the small model
 - Docker
-- Cog (`pip install cog`)
+- Cog (see https://cog.run)
 
 ## Use cases
 
 Content creators transcribing and analyzing podcasts, interviews, and videos. Businesses processing meeting recordings and customer calls. Researchers working with multilingual audio data. Developers building voice-controlled applications.
 
-Perfect when you need both accurate transcription AND smart audio understanding.
+Good when you need both accurate transcription AND smart audio understanding.
 
 ## How it works
 
@@ -87,8 +87,8 @@ Voxtral beats other models on FLEURS, Mozilla Common Voice, and Multilingual Lib
 
 ## Two model sizes
 
-**Mini (3B)**: Fast, lower GPU requirements, handles most use cases  
-**Small (24B)**: Maximum accuracy for complex audio, professional transcription quality
+**Mini (3 billion parameters)**: Runs faster, uses less GPU memory, handles most use cases  
+**Small (24 billion parameters)**: More accurate for complex audio, better for challenging recordings
 
 ## What's included
 
