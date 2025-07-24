@@ -2,16 +2,31 @@
 # https://cog.run/python
 
 import os
+import subprocess
+import time
 import torch
 from cog import BasePredictor, Input, Path
 from transformers import AutoProcessor, VoxtralForConditionalGeneration
 
 MODEL_CACHE = "model_cache"
-os.environ["HF_HOME"] = MODEL_CACHE
-os.environ["TORCH_HOME"] = MODEL_CACHE
-os.environ["HF_DATASETS_CACHE"] = MODEL_CACHE
-os.environ["TRANSFORMERS_CACHE"] = MODEL_CACHE
-os.environ["HUGGINGFACE_HUB_CACHE"] = MODEL_CACHE
+BASE_URL = "https://weights.replicate.delivery/default/voxtral/model_cache/"
+
+def download_weights(url: str, dest: str) -> None:
+    start = time.time()
+    print("[!] Initiating download from URL: ", url)
+    print("[~] Destination path: ", dest)
+    if ".tar" in dest:
+        dest = os.path.dirname(dest)
+    command = ["pget", "-vf" + ("x" if ".tar" in url else ""), url, dest]
+    try:
+        print(f"[~] Running command: {' '.join(command)}")
+        subprocess.check_call(command, close_fds=False)
+    except subprocess.CalledProcessError as e:
+        print(
+            f"[ERROR] Failed to download weights. Command '{' '.join(e.cmd)}' returned non-zero exit status {e.returncode}."
+        )
+        raise
+    print("[+] Download completed in: ", time.time() - start, "seconds")
 
 LANGUAGES = {
     "English": "en",
@@ -31,6 +46,31 @@ LANGUAGES = {
 class Predictor(BasePredictor):
     def setup(self) -> None:
         """Load the models into memory to make running multiple predictions efficient"""
+        # Create model cache directory if it doesn't exist
+        if not os.path.exists(MODEL_CACHE):
+            os.makedirs(MODEL_CACHE)
+            
+        # Set environment variables for model caching
+        os.environ["HF_HOME"] = MODEL_CACHE
+        os.environ["TORCH_HOME"] = MODEL_CACHE
+        os.environ["HF_DATASETS_CACHE"] = MODEL_CACHE
+        os.environ["TRANSFORMERS_CACHE"] = MODEL_CACHE
+        os.environ["HUGGINGFACE_HUB_CACHE"] = MODEL_CACHE
+
+        model_files = [
+            # ".locks.tar",
+            "models--MohamedRashad--Voxtral-Mini-3B-2507-transformers.tar",
+            "models--MohamedRashad--Voxtral-Small-24B-2507-transformers.tar",
+            "xet.tar",
+        ]
+
+        for model_file in model_files:
+            url = BASE_URL + model_file
+            filename = url.split("/")[-1]
+            dest_path = os.path.join(MODEL_CACHE, filename)
+            if not os.path.exists(dest_path.replace(".tar", "")):
+                download_weights(url, dest_path)
+
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         print(f"Using device: {self.device}")
 
