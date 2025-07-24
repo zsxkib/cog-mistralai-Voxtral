@@ -1,147 +1,131 @@
-# Cog Template Repository
+# Voxtral
 
-This is a template repository for creating [Cog](https://github.com/replicate/cog) models that efficiently handle model weights with proper caching. It includes tools to upload model weights to Google Cloud Storage and generate download code for your `predict.py` file.
+[![Replicate](https://replicate.com/zsxkib/voxtral/badge)](https://replicate.com/zsxkib/voxtral)
 
-[![Replicate](https://replicate.com/zsxkib/model-name/badge)](https://replicate.com/zsxkib/model-name)
+You know how most speech AI either transcribes what you say or completely misses the point? Voxtral actually gets it.
 
-## Getting Started
+Ask it to transcribe a 30-minute meeting and it catches every word. Play it audio in French and ask a question in English - it handles both. Give it a messy conversation with multiple people talking over each other, and it can tell you what's actually happening.
 
-To use this template for your own model:
+This is Mistral's Voxtral - their language model that learned how to hear.
 
-1. Clone this repository
-2. Modify `predict.py` with your model's implementation
-3. Update `cog.yaml` with your model's dependencies
-4. Use `cache_manager.py` to upload and manage model weights
+## Try it right now
 
-## Repository Structure
-
-- `predict.py`: The main model implementation file 
-- `cache_manager.py`: Script for uploading model weights to GCS and generating download code
-- `cog.yaml`: Cog configuration file that defines your model's environment
-
-## Managing Model Weights with cache_manager.py
-
-A key feature of this template is the `cache_manager.py` script, which helps you:
-
-1. Upload model weights to Google Cloud Storage (GCS)
-2. Generate code for downloading those weights in your `predict.py`
-3. Handle both individual files and directories efficiently
-
-### Prerequisites for Using cache_manager.py
-
-- Google Cloud SDK installed and configured (`gcloud` command)
-- Permission to upload to the specified GCS bucket (default: `gs://replicate-weights/`)
-- `tar` command available in your PATH
-
-### Basic Usage
+Got a GPU and Docker? Three commands and you're processing audio:
 
 ```bash
-python cache_manager.py --model-name your-model-name --local-dirs model_cache
+git clone https://github.com/zsxkib/cog-mistralai-voxtral.git
+cd cog-mistralai-voxtral
+cog predict -i audio=@examples/french_mathis_voice_intro.mp3 -i mode="understanding" -i prompt="What is this person saying?"
 ```
 
-This will:
-1. Find files and directories in the `model_cache` directory
-2. Create tar archives of each directory
-3. Upload both individual files and tar archives to GCS
-4. Generate code snippets for downloading the weights in your `predict.py`
+That's it. No setup, no hunting for model weights. It downloads everything and starts working.
 
-### Advanced Usage
+## What makes this different
+
+Voxtral isn't just another speech model. It's Mistral's language model that can hear:
+
+- **Actually understands context**: Can handle up to 30 minutes of audio for transcription, 40 minutes for understanding
+- **Speaks 8 languages**: Automatic language detection across English, Spanish, French, Portuguese, Hindi, German, Dutch, and Italian  
+- **Two modes**: Perfect transcription AND smart audio analysis
+- **Function calling from voice**: Trigger backend functions and API calls directly from what people say
+- **Built on Mistral Small 3**: All the text smarts, plus audio superpowers
+
+Pick Mini (3B) for speed or Small (24B) for accuracy.
+
+## Some things you can try
 
 ```bash
-python cache_manager.py \
-    --model-name your-model-name \
-    --local-dirs model_cache weights \
-    --gcs-base-path gs://replicate-weights/ \
-    --cdn-base-url https://weights.replicate.delivery/default/ \
-    --keep-tars
+# Try the included French example
+cog predict -i audio=@examples/french_mathis_voice_intro.mp3 -i mode="transcription" -i language="French"
+
+# Ask questions about the audio content  
+cog predict -i audio=@examples/french_mathis_voice_intro.mp3 -i mode="understanding" -i prompt="Summarize what this person is talking about"
+
+# Let it auto-detect the language
+cog predict -i audio=@examples/french_mathis_voice_intro.mp3 -i mode="transcription" -i language="Auto-detect"
+
+# Use your own audio file
+cog predict -i audio=@your_meeting.wav -i mode="understanding" -i prompt="Who are the speakers and what are they discussing?"
+
+# Use the bigger model for complex audio
+cog predict -i audio=@complex_discussion.wav -i mode="understanding" -i model_size="small" -i prompt="Extract key insights and action items"
+
+# Get longer responses
+cog predict -i audio=@presentation.wav -i mode="understanding" -i max_tokens=800 -i prompt="Give me a detailed summary"
 ```
 
-#### Parameters
+## All the parameters
 
-- `--model-name`: Required. The name of your model (used in paths)
-- `--local-dirs`: Required. One or more local directories to process
-- `--gcs-base-path`: Optional. Base Google Cloud Storage path
-- `--cdn-base-url`: Optional. Base CDN URL
-- `--keep-tars`: Optional. Keep the generated .tar files locally after upload
+- `audio` - Your audio file (up to 30 minutes for transcription, 40 minutes for understanding)
+- `mode` - `"transcription"` (speech-to-text) or `"understanding"` (analyze and answer questions)
+- `prompt` - Question or instruction for understanding mode (ignored in transcription)  
+- `language` - `"Auto-detect"` or pick one (English, French, German, Spanish, Italian, Portuguese, Dutch, Russian, Chinese, Japanese, Arabic)
+- `model_size` - `"mini"` (3B, faster) or `"small"` (24B, more accurate)
+- `max_tokens` - Response length (50-1000 tokens)
 
-## Workflow Example
+## What you need
 
-1. **Develop your model locally**:
-   ```bash
-   # Run your model once to download weights to model_cache
-   cog predict -i prompt="test"
-   ```
+- NVIDIA GPU with ~8GB VRAM for Mini model, ~55GB for Small model
+- Docker
+- Cog (`pip install cog`)
 
-2. **Upload model weights**:
-   ```bash
-   python cache_manager.py --model-name your-model-name --local-dirs model_cache
-   ```
+## Use cases
 
-3. **Copy the generated code snippet** into your `predict.py`
+Content creators transcribing and analyzing podcasts, interviews, and videos. Businesses processing meeting recordings and customer calls. Researchers working with multilingual audio data. Developers building voice-controlled applications.
 
-4. **Test that the model can download weights**:
-   ```bash
-   rm -rf model_cache
-   cog predict -i prompt="test"
-   ```
+Perfect when you need both accurate transcription AND smart audio understanding.
 
-## Example Implementation
+## How it works
 
-The template comes with a sample Stable Diffusion implementation in `predict.py` that demonstrates:
+Mistral took their Small 3 language model and taught it to understand audio. It handles speech transcription, translation, and audio understanding in one model.
 
-- Setting up the model cache directory
-- Downloading weights from GCS with progress reporting
-- Setting environment variables for model caching
-- Random seed generation for reproducibility
-- Output format and quality options
+The understanding mode combines speech recognition with Mistral's reasoning. It doesn't just hear what's said - it understands meaning, context, and can answer complex questions about audio content.
 
-## Best Practices
+## Performance  
 
-- **Environment Variables**: Set cache-related environment variables early
-  ```python
-  os.environ["HF_HOME"] = MODEL_CACHE
-  os.environ["TORCH_HOME"] = MODEL_CACHE
-  # etc.
-  ```
+Voxtral beats other models on FLEURS, Mozilla Common Voice, and Multilingual LibriSpeech benchmarks. But benchmarks are just numbers - try it on your audio and see how it handles real-world messiness.
 
-- **Seed Management**: Provide a seed parameter and implement random seed generation
-  ```python
-  if seed is None:
-      seed = int.from_bytes(os.urandom(2), "big")
-  print(f"Using seed: {seed}")
-  ```
+## Two model sizes
 
-- **Output Formats**: Support multiple output formats (webp, jpg, png) with quality controls
-  ```python
-  output_format: str = Input(
-      description="Format of the output image",
-      choices=["webp", "jpg", "png"],
-      default="webp"
-  )
-  output_quality: int = Input(
-      description="The image compression quality...",
-      ge=1, le=100, default=80
-  )
-  ```
+**Mini (3B)**: Fast, lower GPU requirements, handles most use cases  
+**Small (24B)**: Maximum accuracy for complex audio, professional transcription quality
 
-## Deploying to Replicate
+## What's included
 
-After setting up your model, you can push it to [Replicate](https://replicate.com):
+- `predict.py` - Main Cog interface with transcription and understanding modes
+- `cog.yaml` - Cog configuration  
+- `examples/french_mathis_voice_intro.mp3` - Sample French audio to test with
+- Model weights download automatically from Hugging Face
 
-1. Create a new model on Replicate
-2. Push your model:
-   ```bash
-   cog push r8.im/username/model-name
-   ```
+## Languages supported
+
+Auto-detection plus dedicated support for:
+- English
+- Spanish  
+- French
+- Portuguese
+- Hindi
+- German
+- Dutch
+- Italian
 
 ## License
 
-MIT
+Code is open source. Model weights follow Mistral's Apache 2.0 license. Built on Mistral's Voxtral technology.
+
+## Citation
+
+```bibtex
+@article{voxtral2024,
+  title={Voxtral: State-of-the-art Speech Understanding},
+  author={Mistral AI},
+  year={2024},
+  url={https://mistral.ai/news/voxtral}
+}
+```
 
 ---
 
----
+Built by Mistral AI. Packaged for Replicate by [@zsxkib](https://github.com/zsxkib) ([@zsakib_](https://twitter.com/zsakib_)).
 
-⭐ Star this on [GitHub](https://github.com/zsxkib/model-name)!
-
-👋 Follow `zsxkib` on [Twitter/X](https://twitter.com/zsakib_)
+[![Replicate](https://replicate.com/zsxkib/voxtral/badge)](https://replicate.com/zsxkib/voxtral)
